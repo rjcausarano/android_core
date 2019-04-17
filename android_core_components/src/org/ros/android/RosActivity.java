@@ -198,8 +198,6 @@ public abstract class RosActivity extends Activity {
   protected void bindNodeMainExecutorService() {
     Intent intent = new Intent(this, NodeMainExecutorService.class);
     intent.setAction(NodeMainExecutorService.ACTION_START);
-    intent.putExtra(NodeMainExecutorService.EXTRA_NOTIFICATION_TICKER, notificationTicker);
-    intent.putExtra(NodeMainExecutorService.EXTRA_NOTIFICATION_TITLE, notificationTitle);
     startService(intent);
     Preconditions.checkState(
         bindService(intent, nodeMainExecutorServiceConnection, BIND_AUTO_CREATE),
@@ -211,6 +209,7 @@ public abstract class RosActivity extends Activity {
     unbindService(nodeMainExecutorServiceConnection);
     nodeMainExecutorService.
             removeListener(nodeMainExecutorServiceConnection.getServiceListener());
+    nodeMainExecutorService.shutdown();
     super.onDestroy();
   }
 
