@@ -16,6 +16,8 @@
 
 package org.ros.android;
 
+import com.google.common.base.Preconditions;
+
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -39,7 +41,6 @@ import android.os.PowerManager.WakeLock;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
-
 import org.ros.RosCore;
 import org.ros.android.android_core_components.R;
 import org.ros.concurrent.ListenerGroup;
@@ -101,8 +102,8 @@ public class NodeMainExecutorService extends Service implements NodeMainExecutor
     nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
     binder = new LocalBinder();
     listeners =
-        new ListenerGroup<NodeMainExecutorServiceListener>(
-            nodeMainExecutor.getScheduledExecutorService());
+            new ListenerGroup<NodeMainExecutorServiceListener>(
+                    nodeMainExecutor.getScheduledExecutorService());
   }
 
   @Override
@@ -125,7 +126,7 @@ public class NodeMainExecutorService extends Service implements NodeMainExecutor
 
   @Override
   public void execute(NodeMain nodeMain, NodeConfiguration nodeConfiguration,
-      Collection<NodeListener> nodeListeneners) {
+                      Collection<NodeListener> nodeListeneners) {
     nodeMainExecutor.execute(nodeMain, nodeConfiguration, nodeListeneners);
   }
 
@@ -213,6 +214,16 @@ public class NodeMainExecutorService extends Service implements NodeMainExecutor
   public int onStartCommand(Intent intent, int flags, int startId) {
     if (intent.getAction() == null) {
       return START_NOT_STICKY;
+    }
+    if (intent.getAction().equals(ACTION_START)) {
+      Preconditions.checkArgument(intent.hasExtra(EXTRA_NOTIFICATION_TICKER));
+      Preconditions.checkArgument(intent.hasExtra(EXTRA_NOTIFICATION_TITLE));
+      Intent notificationIntent = new Intent(this, NodeMainExecutorService.class);
+      notificationIntent.setAction(NodeMainExecutorService.ACTION_SHUTDOWN);
+      PendingIntent pendingIntent = PendingIntent.getService(this, 0, notificationIntent, 0);
+      Notification notification = buildNotification(intent, pendingIntent);
+
+      startForeground(ONGOING_NOTIFICATION, notification);
     }
     if (intent.getAction().equals(ACTION_SHUTDOWN)) {
       shutdown();
