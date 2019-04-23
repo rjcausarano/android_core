@@ -48,6 +48,7 @@ public abstract class RosActivity extends Activity {
   private Class<?> masterChooserActivity = MasterChooser.class;
   private int masterChooserRequestCode = MASTER_CHOOSER_REQUEST_CODE;
   protected NodeMainExecutorService nodeMainExecutorService;
+  private Boolean shutdownSignalReceived = false;
 
   /**
    * Default Activity Result callback - compatible with standard {@link MasterChooser}
@@ -123,6 +124,7 @@ public abstract class RosActivity extends Activity {
           // We may have added multiple shutdown listeners and we only want to
           // call finish() once.
           if (!RosActivity.this.isFinishing()) {
+            shutdownSignalReceived = true;
             RosActivity.this.finish();
           }
         }
@@ -208,10 +210,14 @@ public abstract class RosActivity extends Activity {
 
   @Override
   protected void onDestroy() {
+    finishActivity(MASTER_CHOOSER_REQUEST_CODE);
     unbindService(nodeMainExecutorServiceConnection);
     nodeMainExecutorService.
             removeListener(nodeMainExecutorServiceConnection.getServiceListener());
-    nodeMainExecutorService.shutdown();
+    if (!shutdownSignalReceived) {
+      //shutdown if RosActivity is not finished by a shutdown signal
+      nodeMainExecutorService.shutdown();
+    }
     super.onDestroy();
   }
 
