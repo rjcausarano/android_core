@@ -216,7 +216,7 @@ public abstract class RosActivity extends Activity {
             removeListener(nodeMainExecutorServiceConnection.getServiceListener());
     if (!shutdownSignalReceived) {
       //shutdown if RosActivity is not finished by a shutdown signal
-      nodeMainExecutorService.shutdown();
+      nodeMainExecutorService.forceShutdown();
     }
     super.onDestroy();
   }
